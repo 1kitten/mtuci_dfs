@@ -1,13 +1,10 @@
 from fastapi import FastAPI
 import uvicorn
+from district.router import dist_router
 
 
 app = FastAPI(title="dsf")
-
-
-@app.get("/")
-def hello():
-    return {"Hello": "World"}
+app.include_router(router=dist_router, prefix="/district")
 
 
 if __name__ == '__main__':
