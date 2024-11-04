@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0">
+    <title>Управление туннелями</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #d3d3d3, #f5f5f5);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #333;
+            padding: 0 10px;
+            box-sizing: border-box;
+        }
+
+        header {
+            background-color: #5bc0de;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        #postForm {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            max-width: 100%;
+            width: 500px;
+            box-sizing: border-box;
+            margin-top: 20px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            font-size: 1.6rem;
+        }
+
+        label {
+            font-weight: bold;
+            margin-top: 10px;
+            display: block;
+            color: #444;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 8px;
+            margin-top: 5px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        #tunnelsContainer {
+            margin-bottom: 15px;
+        }
+
+        .tunnel-pair {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+            gap: 5px;
+        }
+
+        button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            margin-top: 10px;
+        }
+
+            button[type="button"] {
+                background-color: #5a9;
+                color: #fff;
+                width: 100%;
+            }
+
+                button[type="button"]:hover {
+                    background-color: #48b;
+                }
+
+        .tunnel-pair button {
+            background-color: #d9534f;
+            color: #fff;
+            width: auto;
+        }
+
+            .tunnel-pair button:hover {
+                background-color: #c9302c;
+            }
+
+        button[type="submit"] {
+            width: 100%;
+            background-color: #5bc0de;
+            color: #fff;
+        }
+
+            button[type="submit"]:hover {
+                background-color: #31b0d5;
+            }
+
+        #response {
+            margin-top: 15px;
+            text-align: center;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .notification {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 20px;
+            border-radius: 8px;
+            color: white;
+            display: none;
+            z-index: 1000;
+        }
+
+        footer {
+            margin-top: auto;
+            background-color: #5bc0de;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            bottom: 0;
+        }
+
+        @media (max-width: 600px) {
+            #postForm {
+                padding: 15px;
+                width: 100%;
+            }
+
+            h2 {
+                font-size: 1.4rem;
+            }
+
+            button,
+            input[type="number"] {
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Управление туннелями</h1>
+    </header>
+
+    <form id="postForm">
+        <h2>Отправить данные</h2>
+
+        <label for="totalDistricts">Общее количество округов:</label>
+        <input type="number" id="totalDistricts" name="totalDistricts" readonly>
+
+        <label for="districtA">Округ A:</label>
+        <input type="number" id="districtA" name="districtA" required>
+
+        <label for="districtB">Округ B:</label>
+        <input type="number" id="districtB" name="districtB" required>
+
+        <h3>Туннели</h3>
+        <div id="tunnelsContainer"></div>
+        <button type="button" onclick="addTunnelPair()">Добавить туннель</button>
+
+        <button type="submit">Отправить</button>
+    </form>
+
+    <div id="response" class="notification"></div>
+
+    <footer>
+        <p>&copy; 2024 Студенты УБВТ2203 | Смирнов Н.В | Тинкеев В.С | Белоусов А.Д | Костюченко Е.В | Стрельченко М.В </p>
+    </footer>
+
+    <script>
+        let tunnelCount = 0;
+
+        function addTunnelPair() {
+            tunnelCount++;
+            const tunnelsContainer = document.getElementById("tunnelsContainer");
+
+            const tunnelPairDiv = document.createElement("div");
+            tunnelPairDiv.className = "tunnel-pair";
+
+            const input1 = document.createElement("input");
+            input1.type = "number";
+            input1.placeholder = `Туннель ${tunnelCount} (1)`;
+            input1.required = true;
+            input1.oninput = updateTotalDistricts;
+
+            const input2 = document.createElement("input");
+            input2.type = "number";
+            input2.placeholder = `Туннель ${tunnelCount} (2)`;
+            input2.required = true;
+            input2.oninput = updateTotalDistricts;
+
+            const deleteButton = document.createElement("button");
+            deleteButton.type = "button";
+            deleteButton.innerText = "Удалить";
+            deleteButton.onclick = function () {
+                tunnelsContainer.removeChild(tunnelPairDiv);
+                updateTotalDistricts();
+            };
+
+            tunnelPairDiv.appendChild(input1);
+            tunnelPairDiv.appendChild(input2);
+            tunnelPairDiv.appendChild(deleteButton);
+            tunnelsContainer.appendChild(tunnelPairDiv);
+
+            updateTotalDistricts();
+        }
+
+        function updateTotalDistricts() {
+            const tunnelInputs = document.querySelectorAll("#tunnelsContainer .tunnel-pair input");
+            const uniqueDistricts = new Set();
+
+            tunnelInputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (!isNaN(value)) {
+                    uniqueDistricts.add(value);
+                }
+            });
+
+            document.getElementById("totalDistricts").value = uniqueDistricts.size;
+        }
+
+        document.getElementById("postForm").addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const totalDistricts = parseInt(document.getElementById("totalDistricts").value);
+            const districtA = parseInt(document.getElementById("districtA").value);
+            const districtB = parseInt(document.getElementById("districtB").value);
+
+            const tunnels = Array.from(document.querySelectorAll("#tunnelsContainer .tunnel-pair")).map(pair => {
+                const inputs = pair.getElementsByTagName("input");
+                return [parseInt(inputs[0].value), parseInt(inputs[1].value)];
+            });
+
+            const requestData = {
+                total_districts: totalDistricts,
+                tunnels: tunnels,
+                district_a: districtA,
+                district_b: districtB
+            };
+
+            try {
+                const response = await fetch("/district/path_possibility", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(requestData)
+                });
+
+                const result = await response.json();
+                showNotification(result.result);
+                clearForm();
+            } catch (error) {
+                showNotification("Ошибка запроса: " + error.message, true);
+            }
+        });
+
+        function showNotification(message, isError = false) {
+            const notification = document.getElementById("response");
+            notification.innerText = "Получен ответ: " + message.result;
+            notification.style.backgroundColor = isError ? "#d9534f" : "#5cb85c";
+            notification.style.display = "block";
+
+            setTimeout(() => {
+                notification.style.display = "none";
+            }, 5000);
+        }
+
+        function clearForm() {
+            document.getElementById("districtA").value = '';
+            document.getElementById("districtB").value = '';
+            const tunnelsContainer = document.getElementById("tunnelsContainer");
+            while (tunnelsContainer.firstChild) {
+                tunnelsContainer.removeChild(tunnelsContainer.firstChild);
+            }
+            tunnelCount = 0;
+            updateTotalDistricts();
+        }
+    </script>
+</body>
+</html>
