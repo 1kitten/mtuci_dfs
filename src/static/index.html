@@ -84,15 +84,15 @@
             margin-top: 10px;
         }
 
-            button[type="button"] {
-                background-color: #5a9;
-                color: #fff;
-                width: 100%;
-            }
+        button[type="button"] {
+            background-color: #5a9;
+            color: #fff;
+            width: 100%;
+        }
 
-                button[type="button"]:hover {
-                    background-color: #48b;
-                }
+        button[type="button"]:hover {
+            background-color: #48b;
+        }
 
         .tunnel-pair button {
             background-color: #d9534f;
@@ -100,9 +100,9 @@
             width: auto;
         }
 
-            .tunnel-pair button:hover {
-                background-color: #c9302c;
-            }
+        .tunnel-pair button:hover {
+            background-color: #c9302c;
+        }
 
         button[type="submit"] {
             width: 100%;
@@ -110,9 +110,9 @@
             color: #fff;
         }
 
-            button[type="submit"]:hover {
-                background-color: #31b0d5;
-            }
+        button[type="submit"]:hover {
+            background-color: #31b0d5;
+        }
 
         #response {
             margin-top: 15px;
@@ -170,8 +170,8 @@
     <form id="postForm">
         <h2>Отправить данные</h2>
 
-        <label for="totalDistricts">Общее количество округов:</label>
-        <input type="number" id="totalDistricts" name="totalDistricts" readonly>
+        <label for="totalTunnels">Общее количество туннелей:</label>
+        <input type="number" id="totalTunnels" name="totalTunnels" readonly>
 
         <label for="districtA">Округ A:</label>
         <input type="number" id="districtA" name="districtA" required>
@@ -206,20 +206,20 @@
             input1.type = "number";
             input1.placeholder = `Туннель ${tunnelCount} (1)`;
             input1.required = true;
-            input1.oninput = updateTotalDistricts;
+            input1.oninput = updateTotalTunnels;
 
             const input2 = document.createElement("input");
             input2.type = "number";
             input2.placeholder = `Туннель ${tunnelCount} (2)`;
             input2.required = true;
-            input2.oninput = updateTotalDistricts;
+            input2.oninput = updateTotalTunnels;
 
             const deleteButton = document.createElement("button");
             deleteButton.type = "button";
             deleteButton.innerText = "Удалить";
             deleteButton.onclick = function () {
                 tunnelsContainer.removeChild(tunnelPairDiv);
-                updateTotalDistricts();
+                updateTotalTunnels();
             };
 
             tunnelPairDiv.appendChild(input1);
@@ -227,27 +227,55 @@
             tunnelPairDiv.appendChild(deleteButton);
             tunnelsContainer.appendChild(tunnelPairDiv);
 
-            updateTotalDistricts();
+            updateTotalTunnels();
         }
 
-        function updateTotalDistricts() {
+        function updateTotalTunnels() {
             const tunnelInputs = document.querySelectorAll("#tunnelsContainer .tunnel-pair input");
-            const uniqueDistricts = new Set();
+            const graph = {};
 
-            tunnelInputs.forEach(input => {
+            
+            tunnelInputs.forEach((input, index) => {
                 const value = parseInt(input.value);
                 if (!isNaN(value)) {
-                    uniqueDistricts.add(value);
+                    const tunnelIndex = Math.floor(index / 2);
+                    const pair = Math.floor(index % 2) === 0 ? value : parseInt(tunnelInputs[2 * tunnelIndex + 1].value);
+                    
+                    if (!graph[value]) {
+                        graph[value] = [];
+                    }
+                    graph[value].push(pair);
                 }
             });
 
-            document.getElementById("totalDistricts").value = uniqueDistricts.size;
+            // Поиск всех уникальных туннелей с помощью обхода в глубину
+            const uniqueTunnels = new Set();
+            const visited = {};
+
+            function dfs(node) {
+                visited[node] = true;
+                for (const neighbor of graph[node] || []) {
+                    const tunnel = [node, neighbor].sort().join("-");
+                    uniqueTunnels.add(tunnel);
+                    if (!visited[neighbor]) {
+                        dfs(neighbor);
+                    }
+                }
+            }
+
+            for (const node in graph) {
+                if (!visited[node]) {
+                    dfs(parseInt(node));
+                }
+            }
+
+            document.getElementById("totalTunnels").value = uniqueTunnels.size;
         }
 
         document.getElementById("postForm").addEventListener("submit", async function (event) {
             event.preventDefault();
 
-            const totalDistricts = parseInt(document.getElementById("totalDistricts").value);
+            const totalTunnels = parseInt(document.getElementById("totalTunnels").value);
             const districtA = parseInt(document.getElementById("districtA").value);
             const districtB = parseInt(document.getElementById("districtB").value);
 
@@ -257,7 +285,7 @@
             });
 
             const requestData = {
-                total_districts: totalDistricts,
+                total_tunnels: totalTunnels,
                 tunnels: tunnels,
                 district_a: districtA,
                 district_b: districtB
@@ -271,7 +299,7 @@
                 });
 
                 const result = await response.json();
-                showNotification(result.result);
+                showNotification(result);
                 clearForm();
             } catch (error) {
                 showNotification("Ошибка запроса: " + error.message, true);
@@ -281,23 +309,19 @@
         function showNotification(message, isError = false) {
             const notification = document.getElementById("response");
             notification.innerText = "Получен ответ: " + message.result;
-            notification.style.backgroundColor = isError ? "#d9534f" : "#5cb85c";
+            notification.style.backgroundColor = isError ? "#d9534f" : "#5bc0de";
             notification.style.display = "block";
-
             setTimeout(() => {
                 notification.style.display = "none";
-            }, 5000);
+            }, 3000);
         }
 
         function clearForm() {
-            document.getElementById("districtA").value = '';
-            document.getElementById("districtB").value = '';
-            const tunnelsContainer = document.getElementById("tunnelsContainer");
-            while (tunnelsContainer.firstChild) {
-                tunnelsContainer.removeChild(tunnelsContainer.firstChild);
-            }
+            document.getElementById("districtA").value = "";
+            document.getElementById("districtB").value = "";
+            document.getElementById("tunnelsContainer").innerHTML = "";
+            document.getElementById("totalTunnels").value = 0;
             tunnelCount = 0;
-            updateTotalDistricts();
         }
     </script>
 </body>
